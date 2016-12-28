@@ -72,10 +72,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AppConfigSettingsProvider.cs" />
-    <Compile Include="CommandLineSettingsProvider.cs" />
+    <Compile Include="Settings\AppConfigSettingsProvider.cs" />
+    <Compile Include="ChunkDescription.cs" />
+    <Compile Include="Settings\CommandLineSettingsProvider.cs" />
     <Compile Include="DbExporter.cs" />
-    <Compile Include="ISettingsProvider.cs" />
+    <Compile Include="DbProvider.cs" />
+    <Compile Include="Interfaces\IDbProvider.cs" />
+    <Compile Include="Interfaces\ISettingsProvider.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Record.cs" />

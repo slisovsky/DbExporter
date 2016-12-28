@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DbExport.Interfaces;
 using Fclp;
 
-namespace DbExport
+namespace DbExport.Settings
 {
+    /// <summary>
+    /// Реализация настроек для чтения их из параметров командной строки приложения
+    /// </summary>
     public class CommandLineSettingsProvider: ISettingsProvider
     {
+        /// <summary>
+        /// Конструктор. Получает список параметров командной строки и инициализирует соответсвующие поля.
+        /// </summary>
+        /// <param name="args">Список параметров командной строки со значениями в формате /paramName paramValue</param>
         public CommandLineSettingsProvider(List<string> args)
         {
             var parser = new FluentCommandLineParser<Settings>();
@@ -43,6 +49,7 @@ namespace DbExport
             _settings = parser.Object;
         }
 
+        /// <inheritdoc />
         public string ConnectionString
         {
             get
@@ -51,6 +58,7 @@ namespace DbExport
             }
         }
 
+        /// <inheritdoc />
         public int MaxNumberOfThreads
         {
             get
@@ -59,6 +67,7 @@ namespace DbExport
             }
         }
 
+        /// <inheritdoc />
         public string SourceTable
         {
             get
@@ -67,6 +76,7 @@ namespace DbExport
             }
         }
 
+        /// <inheritdoc />
         public string DestinationTable
         {
             get
@@ -76,6 +86,9 @@ namespace DbExport
         }
 
         private readonly Settings _settings;
+        /// <summary>
+        /// Сюда FluentCommandLineParser будет писать значения параметров.
+        /// </summary>
         private class Settings
         {
             public string ConnectionString { get; set; }

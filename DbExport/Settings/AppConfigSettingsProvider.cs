@@ -1,20 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Data.Common;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DbExport.Interfaces;
 
-namespace DbExport
+namespace DbExport.Settings
 {
+    /// <summary>
+    /// Реализация настроек экспорта. Читает настройки из конфига приложения
+    /// </summary>
     public class AppConfigSettingsProvider: ISettingsProvider
     {
+        /// <summary>
+        /// Конструктор. Собирает все настройки из конфига.
+        /// Если обязательные настройки не указаны(строка подключения к БД,
+        /// табица-источник, таблица-приемник) - выбросит исключение.
+        /// Кол-во потоков является необязательным параметром, значение по умолчанию - 10
+        /// </summary>
         public AppConfigSettingsProvider()
         {
-            // тут будем парсить параметры из конфига.
-            // если что-то пойдет не так  - бросим исключение
             const int predefinedThreadsCount = 10;
             var errorMsg = string.Empty;
             var connectionString = ConfigurationManager.ConnectionStrings["SourceDBConnection"];
@@ -41,9 +43,17 @@ namespace DbExport
                 throw new ArgumentException(string.Format("При чтении параметров из конфига обнаружены ошибки: {0}", errorMsg));
             }
         }
+        
+        /// <inheritdoc />
         public string ConnectionString { get; }
+
+        /// <inheritdoc />
         public int MaxNumberOfThreads { get; }
+
+        /// <inheritdoc />
         public string SourceTable { get; }
+
+        /// <inheritdoc />
         public string DestinationTable { get; }
     }
 }

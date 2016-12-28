@@ -1,71 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Data.SqlClient;
-using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
-using NLog.Internal;
+using DbExport.Interfaces;
+using NLog;
 
 namespace DbExport
 {
     public class DbExporter
     {
-        public DbExporter(string connectionString)
+        public DbExporter(IDbProvider dbProvider, ISettingsProvider settings, ILogger logger)
         {
-            _connectionString = connectionString;
-        }
-
-        public bool EnsureTableExists(string name)
-        {
-            using (var connection = new SqlConnection(_connectionString))
+            if (dbProvider == null)
             {
-                var query = string.Format("select object_id(N'{0}')", name);
-                var objectId = connection.ExecuteScalar<int?>(query);
-                return objectId.HasValue;
+                throw new ArgumentNullException(@"Не указан провайдер для работы с БД.");
             }
-        }
 
-        public int GetRowCount(string tableName)
-        {
-            using (var connection = new SqlConnection(_connectionString))
+            if(settings == null)
             {
-                var query = string.Format("select count(*) from {0}", tableName);
-                var count = connection.ExecuteScalar<int>(query);
-                return count;
+                throw new ArgumentNullException(@"Не указаны настройки экспорта.");
             }
-        }
 
-        public void InsertRecord(string tableName, int id, string firstName, string lastName)
-        {
-            using (var connection = new SqlConnection(_connectionString))
+            if (logger == null)
             {
-                var query = "merge into dbo.Destination as trg " +
-                            "using (select @id as id, @firstName as FirstName, @lastName as LastName) as src on trg.ID = src.ID " +
-                            " when not matched then insert values(src.ID, src.FirstName, src.LastName);";
-                connection.Execute(query, new { id, firstName, lastName});
+                throw new ArgumentNullException(@"Не указан логгер.");
             }
+            _provider = dbProvider;
+            _settings = settings;
+            _logger = logger;
         }
 
-        public void Export(List<ChunkDescription> chunks, int threadCount)
+        /// <summary>
+        /// Экспортирует строки из одной таблицы в другую по "кусочкам"
+        /// проверяет существование таблиц (источника и применика). Если какая-либо из них не существует - выдает исключение
+        /// </summary>
+        public void Export()
         {
+            if (!_provider.EnsureTableExists(_settings.SourceTable))
+            {
+                throw new Exception(string.Format("Таблица {0} не найдена", _settings.SourceTable));
+            }
+            if (!_provider.EnsureTableExists(_settings.DestinationTable))
+            {
+                throw new Exception(string.Format("Таблица {0} не найдена", _settings.DestinationTable));
+            }
+            int threadCount = _settings.MaxNumberOfThreads;
+            var count = _provider.GetRowCount(_settings.SourceTable);
+            var rowsPerThread = (int)Math.Ceiling((double)count / threadCount);
+            var chunks = new List<ChunkDescription>();
+            for (var i = 1; i <= 10; i++)
+            {
+                chunks.Add(new ChunkDescription { MinId = (i - 1) * rowsPerThread + 1, MaxId = i * rowsPerThread });
+            }
+
+            _logger.Trace("Начинаем экспорт. Всего строк: {0}, всего потоков: {1}", count, threadCount);
+            _logger.Trace("Таблица-источник: {0}, таблица-приемник: {1}", _settings.SourceTable, _settings.DestinationTable);
             Parallel.ForEach(chunks, new ParallelOptions {MaxDegreeOfParallelism = threadCount}, ExportChunk);
+            count = _provider.GetRowCount(_settings.DestinationTable);
+            _logger.Trace("Закончили экспорт. Всего строк скопировано: {0}", count);
         }
 
         private void ExportChunk(ChunkDescription chunk)
         {
-            var records = new List<Record>();
-            var query = "select s.ID, s.FirstName, s.LastName from dbo.Source as s " +
-                        "where s.ID between @minId and @maxId";
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                records = connection.Query<Record>(query, new {chunk.MinId, chunk.MaxId}).ToList();
-            }
+            _logger.Trace("Начинаем экспорт записей {0} - {1}", chunk.MinId, chunk.MaxId);
+            var records = _provider.GetRecords(_settings.SourceTable, chunk.MinId, chunk.MaxId);
+
             foreach (var item in records)
             {
-                InsertRecord("dbo.Destination", item.Id, item.FirstName, item.LastName);
+                _provider.InsertRecord(_settings.DestinationTable, item.Id, item.FirstName, item.LastName);
             }
+            _logger.Trace("Закончили экспорт записей {0} - {1}", chunk.MinId, chunk.MaxId);
         }
-        private string _connectionString;
+        private readonly IDbProvider _provider;
+        private readonly ISettingsProvider _settings;
+        private readonly ILogger _logger;
     }
 }

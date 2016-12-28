@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbExport", "DbExport\DbExport.csproj", "{FA332DB7-1AEE-4B27-882D-EC82952A9117}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbExport.Tests", "DbExport.Tests\DbExport.Tests.csproj", "{CB1C4E91-7952-440E-BE45-E59CF8C19FE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FA332DB7-1AEE-4B27-882D-EC82952A9117}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA332DB7-1AEE-4B27-882D-EC82952A9117}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA332DB7-1AEE-4B27-882D-EC82952A9117}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB1C4E91-7952-440E-BE45-E59CF8C19FE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB1C4E91-7952-440E-BE45-E59CF8C19FE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB1C4E91-7952-440E-BE45-E59CF8C19FE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB1C4E91-7952-440E-BE45-E59CF8C19FE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
