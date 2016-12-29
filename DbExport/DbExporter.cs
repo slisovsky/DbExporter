@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 using DbExport.Interfaces;
 using NLog;
@@ -63,10 +64,25 @@ namespace DbExport
         {
             _logger.Trace("Начинаем экспорт записей {0} - {1}", chunk.MinId, chunk.MaxId);
             var records = _provider.GetRecords(_settings.SourceTable, chunk.MinId, chunk.MaxId);
-
-            foreach (var item in records)
+            try
             {
-                _provider.InsertRecord(_settings.DestinationTable, item.Id, item.FirstName, item.LastName);
+
+                foreach (var item in records)
+                {
+                    _provider.InsertRecord(_settings.DestinationTable, item.Id, item.FirstName, item.LastName);
+                }
+            }
+            catch (SqlException ex)
+            {
+                // В данной сиутации ошибка про PK constraint нас не пугает.
+                // Это означает, что кто-то другой уже вставил строку,
+                // пока merge пытался ее прочитать. а так как по умолчанию уровень изолированности read commited
+                // мы вставленную строку увидим "в процессе" мержа.
+                // такого можно избежать, наложив holdlock в запросе.
+                if (ex.Number != 2627)
+                {
+                    throw;
+                }
             }
             _logger.Trace("Закончили экспорт записей {0} - {1}", chunk.MinId, chunk.MaxId);
         }

@@ -21,6 +21,7 @@ namespace DbExport
             }
             _connectionString = settings.ConnectionString;
         }
+
         /// <inheritdoc />
         public bool EnsureTableExists(string name)
         {
@@ -48,9 +49,9 @@ namespace DbExport
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var query = string.Format("merge into {0} as trg " +
-                                          "using (select @id as id, @firstName as FirstName, @lastName as LastName) as src on trg.ID = src.ID " +
-                                          " when not matched then insert values(src.ID, src.FirstName, src.LastName);", tableName);
+                var query = string.Format("merge into {0} as trg  " +
+                                            "using (select @id as id, @firstName as FirstName, @lastName as LastName) as src on trg.ID = src.ID " +
+                                            " when not matched then insert values(src.ID, src.FirstName, src.LastName);", tableName);
                 connection.Execute(query, new { id, firstName, lastName });
             }
         }
